@@ -57,3 +57,13 @@ typings/
 # dotenv environment variables file
 .env
 
+.idea/cfassignment.iml
+.idea/inspectionProfiles/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/misc.xml
+.idea/vcs.xml
+.idea/watcherTasks.xml
+public/fonts/
+public/icons/
+public/tests/
