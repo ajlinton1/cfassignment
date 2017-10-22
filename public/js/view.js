@@ -1,6 +1,6 @@
 this.cfassignment = (
     function(cfassignment){
-
+        var self = this;
         let title = React.createElement('span',null,"Tasks");
         let addButton = React.createElement('button',null,'Add');
         let saveButton = React.createElement('button',null,'Save');
@@ -15,10 +15,15 @@ this.cfassignment = (
         let taskList = React.createElement('div',null,'Task List',tasks);
 
         ReactDOM.render(
-//            React.createElement('div',null,Title,addButton,saveButton,taskList,Title),
             React.createElement(Container,null),
             document.getElementById("content")
         );
+
+        self.taskAdd = function(text) {
+            debugger;
+        }
+
+
     }(this.cfassignment || {})
 );
 
