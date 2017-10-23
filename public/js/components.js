@@ -128,8 +128,23 @@ class Container extends React.Component{
     }
 
     saveTask() {
+        var self = this;
         console.log('Save task');
-        this.setState({'dirty':false});
+        var payload = {};
+        payload.tasks = this.state.tasks;
+
+        fetch('http://cfassignment.herokuapp.com/ajlinton/tasks', {
+            method: "post",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        }).then( (response) => {
+            // TODO: Handle error
+                console.log(response);
+                self.setState({'dirty':false});
+            });
     }
 
     setDirty(dirty) {
@@ -166,16 +181,21 @@ class Container extends React.Component{
     }
 
     componentDidMount() {
-        let numTasks = 3;
-        var tasks = [];
-
-        for (var i=0;i<numTasks;i++) {
-            var task = {};
-            task.name = 'Task' + i;
-            task.id = i;
-            tasks[i] = task;
-        }
-        this.setState({'tasks':tasks});
+        var self = this;
+        fetch('http://cfassignment.herokuapp.com/ajlinton/tasks').then(function(response) {
+            return response.json().then(function(json){
+                // TODO: Check for error, display alert
+                if (json.tasks) {
+                    self.setState({'tasks':json.tasks});
+                } else if (json.error) {
+                    console.error(json.error);
+                    // TODO: Display dialog
+                } else {
+                    console.error('Network error');
+                    // TODO: Display dialog
+                }
+            })
+        });
     }
 
 }
