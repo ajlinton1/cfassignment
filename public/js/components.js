@@ -65,6 +65,7 @@ class Task extends React.Component{
 }
 
 class TaskContainer extends React.Component{
+
     constructor(props) {
         super(props);
         this.state = {
@@ -72,43 +73,34 @@ class TaskContainer extends React.Component{
         }
         this.state.dirty = props.dirty;
         this.state.setDirty = props.setDirty;
-    }
-
-    componentDidMount() {
-        let numTasks = 3;
-        this.tasks = [];
-        var self = this;
-
-        for (var i=0;i<numTasks;i++) {
-            var taskProperties = {};
-            taskProperties.name = 'Task'+i;
-            taskProperties.id = i;
-            taskProperties.key = i;
-            taskProperties.taskId = i;
-            taskProperties.onTaskChange = this.onTaskChange.bind(this);
-
-            (function(j){
-                taskProperties.delete = function(event) {
-                    console.log('Delete');
-                    self.tasks = self.tasks.filter(
-                        function(t) {
-                            if (t.props.id != j) {
-                                return true
-                            } else {
-                                return false;
-                            }
-                        });
-                    self.setState({'tasks':self.tasks});
-                };
-            })(i);
-
-            self.tasks[i] = React.createElement(Task, taskProperties);
-        }
-        this.setState({'tasks':self.tasks});
+        this.state.tasks = props.tasks;
     }
 
     render() {
-        return React.createElement('div',null,'Task List',this.state.tasks);
+        var taskComponents = null;
+        var self = this;
+       if (this.props.tasks) {
+            taskComponents = [];
+            for (var i=0;i<this.props.tasks.length;i++) {
+                var taskProperties = {};
+                taskProperties.name = this.props.tasks[i].name;
+                taskProperties.id = this.props.tasks[i].id;
+                taskProperties.key = this.props.tasks[i].id;;
+                taskProperties.taskId = this.props.tasks[i].id;;
+                taskProperties.onTaskChange =  this.onTaskChange.bind(this);
+
+                (function(taskToDelete){
+                    taskProperties.delete = function(event) {
+                        console.log('Delete');
+                        self.props.deleteTask(taskToDelete);
+                    };
+                })(this.props.tasks[i]);
+
+                taskComponents[i] = React.createElement(Task, taskProperties);
+            }
+        }
+
+        return React.createElement('div',null,'Task List',taskComponents);
     }
 
     onTaskChange() {
@@ -128,14 +120,28 @@ class Container extends React.Component{
     addTask() {
         console.log('Add task');
         this.setState({'dirty':true});
+        var task = {};
+        task.name = 'NewTask';
+        task.id = 5;
+        this.state.tasks.push(task);
+        this.setState({'tasks':this.state.tasks});
     }
 
     saveTask() {
         console.log('Save task');
+        this.setState({'dirty':false});
     }
 
     setDirty(dirty) {
         this.setState({'dirty':dirty});
+    }
+
+    deleteTask(taskToDelete) {
+        console.log(taskToDelete);
+        var tasks = this.state.tasks.filter(function(task){
+            return (task!=taskToDelete);
+        });
+        this.setState({'tasks':tasks,'dirty':true});
     }
 
     render() {
@@ -150,7 +156,26 @@ class Container extends React.Component{
             saveProps.disabled = false;
         }
         let buttonSave = React.createElement(Button,saveProps);
-        let taskContainer = React.createElement(TaskContainer,{'dirty':this.state.dirty,'setDirty':this.setDirty.bind(this)});
+        var taskContainerProps = {};
+        taskContainerProps.dirty = this.state.dirty;
+        taskContainerProps.setDirty = this.setDirty.bind(this);
+        taskContainerProps.tasks = this.state.tasks;
+        taskContainerProps.deleteTask = this.deleteTask.bind(this);
+        let taskContainer = React.createElement(TaskContainer,taskContainerProps);
         return React.createElement('div',null,'Container',title,buttonAdd,buttonSave,taskContainer);
     }
+
+    componentDidMount() {
+        let numTasks = 3;
+        var tasks = [];
+
+        for (var i=0;i<numTasks;i++) {
+            var task = {};
+            task.name = 'Task' + i;
+            task.id = i;
+            tasks[i] = task;
+        }
+        this.setState({'tasks':tasks});
+    }
+
 }
