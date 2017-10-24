@@ -76,17 +76,24 @@ class TaskContainer extends React.Component{
         this.state.tasks = props.tasks;
     }
 
+    componentDidMount () {
+        const stopRender = this.props.store.subscribe(()=>{
+            this.setState(this.props.store.getState());
+        })
+    }
+
     render() {
         var taskComponents = null;
         var self = this;
-       if (this.props.tasks) {
+        var tasks = this.state.tasks;
+        if (tasks) {
             taskComponents = [];
-            for (var i=0;i<this.props.tasks.length;i++) {
+            for (var i=0;i<tasks.length;i++) {
                 var taskProperties = {};
-                taskProperties.name = this.props.tasks[i].name;
-                taskProperties.id = this.props.tasks[i].id;
-                taskProperties.key = this.props.tasks[i].id;;
-                taskProperties.taskId = this.props.tasks[i].id;;
+                taskProperties.name = tasks[i].name;
+                taskProperties.id = tasks[i].id;
+                taskProperties.key = tasks[i].id;;
+                taskProperties.taskId = tasks[i].id;
                 taskProperties.onTaskChange =  this.onTaskChange.bind(this);
 
                 (function(taskToDelete){
@@ -94,7 +101,7 @@ class TaskContainer extends React.Component{
                         console.log('Delete');
                         self.props.deleteTask(taskToDelete);
                     };
-                })(this.props.tasks[i]);
+                })(tasks[i]);
 
                 taskComponents[i] = React.createElement(Task, taskProperties);
             }
@@ -107,6 +114,7 @@ class TaskContainer extends React.Component{
         this.state.setDirty(true);
         this.state.saveRequired = true;
     }
+
 }
 
 class Container extends React.Component{
@@ -123,15 +131,14 @@ class Container extends React.Component{
         var task = {};
         task.name = 'NewTask';
         task.id = 5;
-        this.state.tasks.push(task);
-        this.setState({'tasks':this.state.tasks});
+        this.state.store.dispatch({ type: 'ADD',task:task });
     }
 
     saveTask() {
         var self = this;
         console.log('Save task');
         var payload = {};
-        payload.tasks = this.state.tasks;
+        payload.tasks = this.state.store;
 
         fetch('http://cfassignment.herokuapp.com/ajlinton/tasks', {
             method: "post",
@@ -160,6 +167,9 @@ class Container extends React.Component{
     }
 
     render() {
+
+        var z = this.props;
+
         let title = React.createElement(Title,{'text':'Task List'});
         let buttonAdd = React.createElement(Button,{'text':'Add','event':this.addTask.bind(this)});
         var saveProps = {};
@@ -174,6 +184,7 @@ class Container extends React.Component{
         var taskContainerProps = {};
         taskContainerProps.dirty = this.state.dirty;
         taskContainerProps.setDirty = this.setDirty.bind(this);
+        taskContainerProps.store = this.props.store;
         taskContainerProps.tasks = this.state.tasks;
         taskContainerProps.deleteTask = this.deleteTask.bind(this);
         let taskContainer = React.createElement(TaskContainer,taskContainerProps);
@@ -187,6 +198,11 @@ class Container extends React.Component{
                 // TODO: Check for error, display alert
                 if (json.tasks) {
                     self.setState({'tasks':json.tasks});
+
+                    json.tasks.forEach(function(task){
+                        self.props.store.dispatch({ type: 'ADD',task:task });
+                    });
+
                 } else if (json.error) {
                     console.error(json.error);
                     // TODO: Display dialog
@@ -197,5 +213,9 @@ class Container extends React.Component{
             })
         });
     }
-
 }
+
+ReactRedux.connect(function(state){return state})(Container);
+
+
+
