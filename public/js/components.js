@@ -19,14 +19,8 @@ class Button extends React.Component{
     render() {
         var buttonProps = {};
         buttonProps.onClick = this.props.event;
-
         buttonProps.disabled = this.props.disabled;
-
         return React.createElement('button',buttonProps,this.props.text);
-    }
-
-    setDisabled(disabled) {
-        this.setState({'disabled':disabled});
     }
 }
 
@@ -46,9 +40,16 @@ class Input extends React.Component{
         }
     }
 
+    componentDidMount () {
+        const stopRender = this.props.store.subscribe(()=>{
+            this.setState(this.props.store.getState());
+        })
+    }
+
     handleChange(event) {
         this.setState({value: event.target.value});
-        this.props.onTaskChange();
+        var update = {id:this.props.id, name:event.target.value};
+        this.props.store.dispatch({ type: 'UPDATE',update });
     }
 
     render() {
@@ -59,7 +60,7 @@ class Input extends React.Component{
 class Task extends React.Component{
     render() {
         let deleteButton = React.createElement(DeleteButton,{'event':this.props.delete,'taskId':this.props.taskId});
-        var text = React.createElement(Input,{'value':this.props.name,'onTaskChange':this.props.onTaskChange})
+        var text = React.createElement(Input,{'value':this.props.name,'onTaskChange':this.props.onTaskChange,'id':this.props.id,store:this.props.store})
         return React.createElement('div',{'id':this.props.id},text,deleteButton);
     }
 }
@@ -68,12 +69,7 @@ class TaskContainer extends React.Component{
 
     constructor(props) {
         super(props);
-        this.state = {
-            'tasks':[]
-        }
-        this.state.dirty = props.dirty;
-        this.state.setDirty = props.setDirty;
-        this.state.tasks = props.tasks;
+        this.state = {};
     }
 
     componentDidMount () {
@@ -94,7 +90,7 @@ class TaskContainer extends React.Component{
                 taskProperties.id = tasks[i].id;
                 taskProperties.key = tasks[i].id;;
                 taskProperties.taskId = tasks[i].id;
-                taskProperties.onTaskChange =  this.onTaskChange.bind(this);
+                taskProperties.store = this.props.store;
 
                 (function(taskToDelete){
                     taskProperties.delete = function(event) {
@@ -109,12 +105,6 @@ class TaskContainer extends React.Component{
 
         return React.createElement('div',null,'Task List',taskComponents);
     }
-
-    onTaskChange() {
-        this.state.setDirty(true);
-        this.state.saveRequired = true;
-    }
-
 }
 
 class Container extends React.Component{
@@ -122,23 +112,21 @@ class Container extends React.Component{
     constructor(props) {
         super(props);
         this.state = {};
-        this.state.dirty = false;
     }
 
     addTask() {
         console.log('Add task');
-        this.setState({'dirty':true});
         var task = {};
         task.name = 'NewTask';
         task.id = 5;
-        this.state.store.dispatch({ type: 'ADD',task:task });
+        this.props.store.dispatch({ type: 'ADD',task:task });
     }
 
     saveTask() {
         var self = this;
         console.log('Save task');
         var payload = {};
-        payload.tasks = this.state.store;
+        payload.tasks = this.state.tasks;
 
         fetch('http://cfassignment.herokuapp.com/ajlinton/tasks', {
             method: "post",
@@ -150,26 +138,14 @@ class Container extends React.Component{
         }).then( (response) => {
             // TODO: Handle error
                 console.log(response);
-                self.setState({'dirty':false});
             });
     }
 
-    setDirty(dirty) {
-        this.setState({'dirty':dirty});
-    }
-
-    deleteTask(taskToDelete) {
-        console.log(taskToDelete);
-        var tasks = this.state.tasks.filter(function(task){
-            return (task!=taskToDelete);
-        });
-        this.setState({'tasks':tasks,'dirty':true});
+    deleteTask(task) {
+        this.props.store.dispatch({ type: 'DELETE',task:task });
     }
 
     render() {
-
-        var z = this.props;
-
         let title = React.createElement(Title,{'text':'Task List'});
         let buttonAdd = React.createElement(Button,{'text':'Add','event':this.addTask.bind(this)});
         var saveProps = {};
@@ -183,7 +159,6 @@ class Container extends React.Component{
         let buttonSave = React.createElement(Button,saveProps);
         var taskContainerProps = {};
         taskContainerProps.dirty = this.state.dirty;
-        taskContainerProps.setDirty = this.setDirty.bind(this);
         taskContainerProps.store = this.props.store;
         taskContainerProps.tasks = this.state.tasks;
         taskContainerProps.deleteTask = this.deleteTask.bind(this);
@@ -193,16 +168,16 @@ class Container extends React.Component{
 
     componentDidMount() {
         var self = this;
+
+        const stopRender = this.props.store.subscribe(()=>{
+            this.setState(this.props.store.getState());
+        })
+
         fetch('http://cfassignment.herokuapp.com/ajlinton/tasks').then(function(response) {
             return response.json().then(function(json){
                 // TODO: Check for error, display alert
                 if (json.tasks) {
-                    self.setState({'tasks':json.tasks});
-
-                    json.tasks.forEach(function(task){
-                        self.props.store.dispatch({ type: 'ADD',task:task });
-                    });
-
+                    self.props.store.dispatch({ type: 'ADD_BULK',tasks:json.tasks });
                 } else if (json.error) {
                     console.error(json.error);
                     // TODO: Display dialog
