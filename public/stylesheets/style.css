@@ -1,5 +1,10 @@
 body {
   font-family: 'Lato', sans-serif;
+  background-color: seashell;
+}
+
+input {
+  background-color: #fcf8e3;
 }
 
 .content {
@@ -8,6 +13,7 @@ body {
 
 .title {
   padding: 20px;
+  font-weight: bold;
 }
 
 .button {
@@ -20,4 +26,15 @@ body {
 
 .task {
   margin: 20px;
+  height: 100px;
+  background-color: #fcf8e3;
+}
+
+.deleteButton {
+  float: right;
+}
+
+#topBar {
+  background-color:black;
+  height: 40px;
 }

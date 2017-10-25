@@ -5,7 +5,11 @@
 
 class Title extends React.Component{
     render() {
-        return React.createElement('span',{className:'title'},this.props.text);
+        var props = {className:'title'};
+        if (this.props.className) {
+            props.className = props.className + ' ' + this.props.className;
+        }
+        return React.createElement('span',props,this.props.text);
     }
 }
 
@@ -23,6 +27,9 @@ class Button extends React.Component{
         buttonProps.onClick = this.props.event;
         buttonProps.disabled = this.props.disabled;
         buttonProps.className = 'button';
+        if (this.props.className) {
+            buttonProps.className = buttonProps.className + ' ' + this.props.className;
+        }
         buttonProps.id = this.props.id;
         return React.createElement('button',buttonProps,this.props.text);
     }
@@ -32,6 +39,7 @@ class DeleteButton extends React.Component{
     render() {
         let buttonProps = {};
         buttonProps.onClick = this.props.event;
+        buttonProps.className = 'deleteButton';
         let deleteItem = React.createElement('i',{className:'fa fa-trash'},'');
         return React.createElement('button',buttonProps,null,deleteItem);
     }
@@ -61,7 +69,7 @@ class Input extends React.Component{
     }
 
     render() {
-        return React.createElement('input',{'value':this.state.value,'onChange':this.handleChange.bind(this)});
+        return React.createElement('input',{'value':this.state.value,className:'input','onChange':this.handleChange.bind(this)});
     }
 }
 
@@ -121,7 +129,7 @@ class TaskContainer extends React.Component{
             });
         }
 
-        return React.createElement('div',null,'',taskComponents);
+        return React.createElement('div',{className:'row'},'',taskComponents);
     }
 }
 
@@ -177,14 +185,21 @@ class Container extends React.Component{
 
     render() {
         let self = this;
-        let title = React.createElement(Title,{'text':'Tasks'});
-        let buttonAdd = React.createElement(Button,{'text':'Add Task','event':this.addTask.bind(this)});
+        let title = React.createElement(Title,{text:'Tasks',className:'col-md-1'});
+        let sp = React.createElement(Title,{text:'',className:'col-md-6'});
+        let buttonAdd = React.createElement(Button,{text:'Add Task',event:this.addTask.bind(this),className:'col-md-2'});
         let saveProps = {};
         saveProps.text = "Save";
         saveProps.id = 'saveButton';
         saveProps.event = this.saveTask.bind(this);
         saveProps.disabled = (!this.state.dirty);
+        saveProps.className = 'col-md-2';
         let buttonSave = React.createElement(Button,saveProps);
+
+        let topBar = React.createElement('div',{id:'topBar'});
+
+        let buttonBar = React.createElement('div',{className:'row'}, title, sp, buttonAdd, buttonSave);
+
         let taskContainerProps = {};
         taskContainerProps.dirty = this.state.dirty;
         taskContainerProps.store = this.props.store;
@@ -204,7 +219,7 @@ class Container extends React.Component{
         }
         let alert = React.createElement(Alert,alertProps);
 
-        return React.createElement('div',{className:'container'},'',title,buttonAdd,buttonSave,taskContainer,alert);
+        return React.createElement('div',{className:'container'},'',topBar, buttonBar,taskContainer,alert);
     }
 
     componentDidMount() {
