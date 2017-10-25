@@ -1,3 +1,8 @@
+// React components
+// TODO: Move each component to a separate source file
+// TODO: Utilize JSX
+// TODO: Use React-Redux to reference store from components
+
 class Title extends React.Component{
     render() {
         return React.createElement('span',{className:'title'},this.props.text);
@@ -14,7 +19,7 @@ class Button extends React.Component{
     }
 
     render() {
-        var buttonProps = {};
+        let buttonProps = {};
         buttonProps.onClick = this.props.event;
         buttonProps.disabled = this.props.disabled;
         buttonProps.className = 'button';
@@ -25,18 +30,18 @@ class Button extends React.Component{
 
 class DeleteButton extends React.Component{
     render() {
-        var buttonProps = {};
+        let buttonProps = {};
         buttonProps.onClick = this.props.event;
-        var deleteItem = React.createElement('i',{className:'fa fa-trash'},'');
+        let deleteItem = React.createElement('i',{className:'fa fa-trash'},'');
         return React.createElement('button',buttonProps,null,deleteItem);
     }
 }
 
 class DismissButton extends React.Component{
     render() {
-        var buttonProps = {};
+        let buttonProps = {};
         buttonProps.onClick = this.props.onClick;
-        var deleteItem = React.createElement('i',{className:'fa fa-window-close'},'');
+        let deleteItem = React.createElement('i',{className:'fa fa-window-close'},'');
         return React.createElement('button',buttonProps,null,deleteItem);
     }
 }
@@ -49,15 +54,9 @@ class Input extends React.Component{
         }
     }
 
- /*   componentDidMount () {
-        const stopRender = this.props.store.subscribe(()=>{
-            this.setState(this.props.store.getState());
-        })
-    } */
-
     handleChange(event) {
         this.setState({value: event.target.value});
-        var update = {id:this.props.id, name:event.target.value};
+        let update = {id:this.props.id, name:event.target.value};
         this.props.store.dispatch({ type: 'UPDATE',update });
     }
 
@@ -69,7 +68,7 @@ class Input extends React.Component{
 class Task extends React.Component{
     render() {
         let deleteButton = React.createElement(DeleteButton,{'event':this.props.delete,'taskId':this.props.taskId});
-        var text = React.createElement(Input,{'value':this.props.name,'onTaskChange':this.props.onTaskChange,'id':this.props.id,store:this.props.store})
+        let text = React.createElement(Input,{'value':this.props.name,'onTaskChange':this.props.onTaskChange,'id':this.props.id,store:this.props.store});
         return React.createElement('div',{'id':this.props.id,className:'task'},text,deleteButton);
     }
 }
@@ -88,33 +87,25 @@ class TaskContainer extends React.Component{
     }
 
     render() {
-        var taskComponents = null;
-        var self = this;
-        var tasks = this.state.tasks;
+        let taskComponents = null;
+        let self = this;
+        let tasks = this.state.tasks;
 
         if (tasks) {
             taskComponents = [];
-            for (var i=0;i<tasks.length;i++) {
-                var taskProperties = {};
+            for (let i=0;i<tasks.length;i++) {
+                let taskProperties = {};
                 taskProperties.name = tasks[i].name;
                 taskProperties.id = tasks[i].id;
-                taskProperties.key = tasks[i].id;;
+                taskProperties.key = tasks[i].id;
                 taskProperties.taskId = tasks[i].id;
                 taskProperties.store = this.props.store;
 
                 (function(taskToDelete){
-                    taskProperties.delete = function(event) {
+                    taskProperties.delete = function() {
                         self.props.deleteTask(taskToDelete);
                     };
                 })(tasks[i]);
-
- /*               var taskPropertiesSorted = taskProperties.sort(function(a,b){
-                    if (a.name > b.name) {
-                        return 1;
-                    } else if (a.name < b.name) {
-                        return -1;
-                    }
-                }); */
 
                 taskComponents[i] = React.createElement(Task, taskProperties);
             }
@@ -137,10 +128,10 @@ class TaskContainer extends React.Component{
 class Alert extends React.Component{
 
     render() {
-        var props = {className: 'alert'};
+        let props = {className: 'alert'};
         props.hidden = this.props.hidden;
         props.onClick = this.props.onClick;
-        var dismissButton = React.createElement(DismissButton,null);
+        let dismissButton = React.createElement(DismissButton,null);
         return React.createElement('span',props,this.props.text, dismissButton);
     }
 }
@@ -154,14 +145,14 @@ class Container extends React.Component{
 
     addTask() {
         console.log('Add task');
-        var task = {};
+        let task = {};
         task.name = 'NewTask';
         this.props.store.dispatch({ type: 'ADD',task:task });
     }
 
     saveTask() {
-        var self = this;
-        var payload = {};
+        let self = this;
+        let payload = {};
         payload.tasks = this.state.tasks;
 
         fetch('http://cfassignment.herokuapp.com/ajlinton/tasks', {
@@ -185,31 +176,27 @@ class Container extends React.Component{
     }
 
     render() {
-        var self = this;
+        let self = this;
         let title = React.createElement(Title,{'text':'Tasks'});
         let buttonAdd = React.createElement(Button,{'text':'Add Task','event':this.addTask.bind(this)});
-        var saveProps = {};
+        let saveProps = {};
         saveProps.text = "Save";
         saveProps.id = 'saveButton';
         saveProps.event = this.saveTask.bind(this);
-        if (!this.state.dirty){
-            saveProps.disabled = true;
-        } else {
-            saveProps.disabled = false;
-        }
+        saveProps.disabled = (!this.state.dirty);
         let buttonSave = React.createElement(Button,saveProps);
-        var taskContainerProps = {};
+        let taskContainerProps = {};
         taskContainerProps.dirty = this.state.dirty;
         taskContainerProps.store = this.props.store;
         taskContainerProps.tasks = this.state.tasks;
         taskContainerProps.deleteTask = this.deleteTask.bind(this);
         let taskContainer = React.createElement(TaskContainer,taskContainerProps);
 
-        var alertProps = {};
+        let alertProps = {};
         if (this.state.alertRequired) {
             alertProps.text = this.state.alertText;
             alertProps.hidden = false;
-            alertProps.onClick = (function(event) {
+            alertProps.onClick = (function() {
                 self.props.store.dispatch({ type: 'HIDE_ALERT' });
             }).bind(this);
         } else {
@@ -221,11 +208,11 @@ class Container extends React.Component{
     }
 
     componentDidMount() {
-        var self = this;
+        let self = this;
 
         const stopRender = this.props.store.subscribe(()=>{
             this.setState(this.props.store.getState());
-        })
+        });
 
         fetch('http://cfassignment.herokuapp.com/ajlinton/tasks').then(function(response) {
             return response.json().then(function(json){
