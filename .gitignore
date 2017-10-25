@@ -64,6 +64,4 @@ typings/
 .idea/misc.xml
 .idea/vcs.xml
 .idea/watcherTasks.xml
-public/fonts/
-public/icons/
-public/tests/
+.idea/
