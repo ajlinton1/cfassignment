@@ -153,7 +153,7 @@ class Container extends React.Component{
     addTask() {
         console.log('Add task');
         let task = {};
-        task.name = 'NewTask';
+        task.name = '';
         this.props.store.dispatch({ type: 'ADD',task:task });
     }
 
