@@ -14,14 +14,6 @@ class Title extends React.Component{
 }
 
 class Button extends React.Component{
-    constructor(props) {
-        super(props);
-        this.state = {};
-        if (this.props.disabled) {
-            this.state.disabled = this.props.disabled;
-        }
-    }
-
     render() {
         let buttonProps = {};
         buttonProps.onClick = this.props.event;
@@ -54,6 +46,7 @@ class DismissButton extends React.Component{
     }
 }
 
+// Displays task name and updates store with changes
 class Input extends React.Component{
     constructor(props) {
         super(props);
@@ -65,6 +58,7 @@ class Input extends React.Component{
     handleChange(event) {
         this.setState({value: event.target.value});
         let update = {id:this.props.id, name:event.target.value};
+        // Update store with changes
         this.props.store.dispatch({ type: 'UPDATE',update });
     }
 
@@ -73,6 +67,8 @@ class Input extends React.Component{
     }
 }
 
+// Simple version to be replaced with actual component
+// Contains text field for task and delete button
 class Task extends React.Component{
     render() {
         let deleteButton = React.createElement(DeleteButton,{'event':this.props.delete,'taskId':this.props.taskId});
@@ -81,6 +77,7 @@ class Task extends React.Component{
     }
 }
 
+// Displays list of tasks
 class TaskContainer extends React.Component{
 
     constructor(props) {
@@ -119,6 +116,7 @@ class TaskContainer extends React.Component{
             }
         }
 
+        // Sort tasks by name
         if (taskComponents) {
             taskComponents = taskComponents.sort(function(a,b){
                 if (a.props.name > b.props.name) {
@@ -144,6 +142,7 @@ class Alert extends React.Component{
     }
 }
 
+// Contains the top buttons as well as the list of tasks
 class Container extends React.Component{
 
     constructor(props) {
@@ -172,6 +171,7 @@ class Container extends React.Component{
             body: JSON.stringify(payload)
         }).then( (response) => {
             if (response.error) {
+                // TODO: Automatically retry
                 self.props.store.dispatch({ type: 'SHOW_ALERT',text:response.error});
             } else {
                 self.props.store.dispatch({ type: 'SHOW_ALERT',text:'Tasks saved successfully'});
@@ -229,11 +229,13 @@ class Container extends React.Component{
             this.setState(this.props.store.getState());
         });
 
+        // Load tasks from server
         fetch('http://cfassignment.herokuapp.com/ajlinton/tasks').then(function(response) {
             return response.json().then(function(json){
                 if (json.tasks) {
                     self.props.store.dispatch({ type: 'ADD_BULK',tasks:json.tasks });
                 } else if (json.error) {
+                    // TODO: Automatically retry
                     console.error(json.error);
                     self.props.store.dispatch({ type: 'SHOW_ALERT',text:json.error });
                 } else {

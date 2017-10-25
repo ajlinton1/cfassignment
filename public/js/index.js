@@ -1,2 +1,3 @@
+// Initialize app
 cfassignment.init();
 

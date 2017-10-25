@@ -1,8 +1,9 @@
-// Redux store for maintaining app state
+// Main app code including init function and Redux store for maintaining app state
 
 this.cfassignment = (
     function(cfassignment){
 
+        // TODO: Define action types as constants
         cfassignment.reducer = function(state = {'tasks':[]}, action) {
             switch (action.type) {
                 case 'ADD':
