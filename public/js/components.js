@@ -1,6 +1,6 @@
 class Title extends React.Component{
     render() {
-        return React.createElement('span',null,this.props.text);
+        return React.createElement('span',{className:'title'},this.props.text);
     }
 }
 
@@ -12,14 +12,13 @@ class Button extends React.Component{
             this.state.disabled = this.props.disabled;
         }
     }
-    handle(event) {
-        console.log(this,event);
-    }
 
     render() {
         var buttonProps = {};
         buttonProps.onClick = this.props.event;
         buttonProps.disabled = this.props.disabled;
+        buttonProps.className = 'button';
+        buttonProps.id = this.props.id;
         return React.createElement('button',buttonProps,this.props.text);
     }
 }
@@ -28,7 +27,17 @@ class DeleteButton extends React.Component{
     render() {
         var buttonProps = {};
         buttonProps.onClick = this.props.event;
-        return React.createElement('button',buttonProps,'Delete');
+        var deleteItem = React.createElement('i',{className:'fa fa-trash'},'');
+        return React.createElement('button',buttonProps,null,deleteItem);
+    }
+}
+
+class DismissButton extends React.Component{
+    render() {
+        var buttonProps = {};
+        buttonProps.onClick = this.props.onClick;
+        var deleteItem = React.createElement('i',{className:'fa fa-window-close'},'');
+        return React.createElement('button',buttonProps,null,deleteItem);
     }
 }
 
@@ -40,11 +49,11 @@ class Input extends React.Component{
         }
     }
 
-    componentDidMount () {
+ /*   componentDidMount () {
         const stopRender = this.props.store.subscribe(()=>{
             this.setState(this.props.store.getState());
         })
-    }
+    } */
 
     handleChange(event) {
         this.setState({value: event.target.value});
@@ -61,7 +70,7 @@ class Task extends React.Component{
     render() {
         let deleteButton = React.createElement(DeleteButton,{'event':this.props.delete,'taskId':this.props.taskId});
         var text = React.createElement(Input,{'value':this.props.name,'onTaskChange':this.props.onTaskChange,'id':this.props.id,store:this.props.store})
-        return React.createElement('div',{'id':this.props.id},text,deleteButton);
+        return React.createElement('div',{'id':this.props.id,className:'task'},text,deleteButton);
     }
 }
 
@@ -82,6 +91,7 @@ class TaskContainer extends React.Component{
         var taskComponents = null;
         var self = this;
         var tasks = this.state.tasks;
+
         if (tasks) {
             taskComponents = [];
             for (var i=0;i<tasks.length;i++) {
@@ -94,16 +104,44 @@ class TaskContainer extends React.Component{
 
                 (function(taskToDelete){
                     taskProperties.delete = function(event) {
-                        console.log('Delete');
                         self.props.deleteTask(taskToDelete);
                     };
                 })(tasks[i]);
+
+ /*               var taskPropertiesSorted = taskProperties.sort(function(a,b){
+                    if (a.name > b.name) {
+                        return 1;
+                    } else if (a.name < b.name) {
+                        return -1;
+                    }
+                }); */
 
                 taskComponents[i] = React.createElement(Task, taskProperties);
             }
         }
 
-        return React.createElement('div',null,'Task List',taskComponents);
+        if (taskComponents) {
+            taskComponents = taskComponents.sort(function(a,b){
+                if (a.props.name > b.props.name) {
+                    return 1;
+                } else if (a.props.name < b.props.name) {
+                    return -1;
+                }
+            });
+        }
+
+        return React.createElement('div',null,'',taskComponents);
+    }
+}
+
+class Alert extends React.Component{
+
+    render() {
+        var props = {className: 'alert'};
+        props.hidden = this.props.hidden;
+        props.onClick = this.props.onClick;
+        var dismissButton = React.createElement(DismissButton,null);
+        return React.createElement('span',props,this.props.text, dismissButton);
     }
 }
 
@@ -118,13 +156,11 @@ class Container extends React.Component{
         console.log('Add task');
         var task = {};
         task.name = 'NewTask';
-        task.id = 5;
         this.props.store.dispatch({ type: 'ADD',task:task });
     }
 
     saveTask() {
         var self = this;
-        console.log('Save task');
         var payload = {};
         payload.tasks = this.state.tasks;
 
@@ -136,8 +172,11 @@ class Container extends React.Component{
             },
             body: JSON.stringify(payload)
         }).then( (response) => {
-            // TODO: Handle error
-                console.log(response);
+            if (response.error) {
+                self.props.store.dispatch({ type: 'SHOW_ALERT',text:response.error});
+            } else {
+                self.props.store.dispatch({ type: 'SHOW_ALERT',text:'Tasks saved successfully'});
+            }
             });
     }
 
@@ -146,10 +185,12 @@ class Container extends React.Component{
     }
 
     render() {
-        let title = React.createElement(Title,{'text':'Task List'});
-        let buttonAdd = React.createElement(Button,{'text':'Add','event':this.addTask.bind(this)});
+        var self = this;
+        let title = React.createElement(Title,{'text':'Tasks'});
+        let buttonAdd = React.createElement(Button,{'text':'Add Task','event':this.addTask.bind(this)});
         var saveProps = {};
         saveProps.text = "Save";
+        saveProps.id = 'saveButton';
         saveProps.event = this.saveTask.bind(this);
         if (!this.state.dirty){
             saveProps.disabled = true;
@@ -163,7 +204,20 @@ class Container extends React.Component{
         taskContainerProps.tasks = this.state.tasks;
         taskContainerProps.deleteTask = this.deleteTask.bind(this);
         let taskContainer = React.createElement(TaskContainer,taskContainerProps);
-        return React.createElement('div',null,'Container',title,buttonAdd,buttonSave,taskContainer);
+
+        var alertProps = {};
+        if (this.state.alertRequired) {
+            alertProps.text = this.state.alertText;
+            alertProps.hidden = false;
+            alertProps.onClick = (function(event) {
+                self.props.store.dispatch({ type: 'HIDE_ALERT' });
+            }).bind(this);
+        } else {
+            alertProps.hidden = true;
+        }
+        let alert = React.createElement(Alert,alertProps);
+
+        return React.createElement('div',{className:'container'},'',title,buttonAdd,buttonSave,taskContainer,alert);
     }
 
     componentDidMount() {
@@ -175,22 +229,18 @@ class Container extends React.Component{
 
         fetch('http://cfassignment.herokuapp.com/ajlinton/tasks').then(function(response) {
             return response.json().then(function(json){
-                // TODO: Check for error, display alert
                 if (json.tasks) {
                     self.props.store.dispatch({ type: 'ADD_BULK',tasks:json.tasks });
                 } else if (json.error) {
                     console.error(json.error);
-                    // TODO: Display dialog
+                    self.props.store.dispatch({ type: 'SHOW_ALERT',text:json.error });
                 } else {
-                    console.error('Network error');
-                    // TODO: Display dialog
+                    self.props.store.dispatch({ type: 'SHOW_ALERT',text:'Network error' });
                 }
             })
         });
     }
 }
-
-ReactRedux.connect(function(state){return state})(Container);
 
 
 

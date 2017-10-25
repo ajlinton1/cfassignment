@@ -1,0 +1,23 @@
+body {
+  font-family: 'Lato', sans-serif;
+}
+
+.content {
+  padding: 50px;
+}
+
+.title {
+  padding: 20px;
+}
+
+.button {
+  margin: 20px;
+}
+
+#saveButton {
+  background-color: #5cb85c;
+}
+
+.task {
+  margin: 20px;
+}

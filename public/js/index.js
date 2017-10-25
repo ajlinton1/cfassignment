@@ -2,6 +2,7 @@ function reducer(state = {'tasks':[]}, action) {
     switch (action.type) {
         case 'ADD':
             state.tasks.push(action.task);
+            action.task.id = state.tasks.length - 1;
             state.dirty = true;
             return state
         case 'ADD_BULK':
@@ -16,6 +17,13 @@ function reducer(state = {'tasks':[]}, action) {
         case 'UPDATE':
             state.tasks[action.update.id].name = action.update.name;
             state.dirty = true;
+            return state;
+        case 'SHOW_ALERT':
+            state.alertRequired = true;
+            state.alertText = action.text;
+            return state;
+        case 'HIDE_ALERT':
+            state.alertRequired = false;
             return state;
         default:
             return state
